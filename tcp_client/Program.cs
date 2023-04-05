@@ -2,6 +2,8 @@
 using System.IO;
 using System.Net.Sockets;
 using System.Net;
+using System.Runtime.Serialization.Formatters.Binary;
+using Shared_Data;
 
 namespace tcp_client
 {
@@ -12,27 +14,32 @@ namespace tcp_client
         static void Main(string[] args)
         {
             IPEndPoint ipPoint = new IPEndPoint(IPAddress.Parse(address), port);
-
             TcpClient client = new TcpClient();
             client.Connect(ipPoint);
 
-            string message = "";
             try
             {
-                while (message != "end")
+                Request requst = new Request();
+                do
                 {
-                    Console.Write("Enter a message:");
-                    message = Console.ReadLine();
+                    Console.Write("Enter A:");
+                    requst.A = double.Parse(Console.ReadLine());
+                    Console.Write("Enter B:");
+                    requst.B = double.Parse(Console.ReadLine());
+                    Console.Write("Enter Operation [1-4]:");
+                    requst.Operation = (OperationType)Enum.Parse(typeof(OperationType), Console.ReadLine());
 
                     NetworkStream ns = client.GetStream();
-                    StreamWriter sw = new StreamWriter(ns);
-                    sw.WriteLine(message);
-                    sw.Flush(); 
+
+                    BinaryFormatter formatter = new BinaryFormatter();
+                    formatter.Serialize(ns, requst);
+
                     StreamReader sr = new StreamReader(ns);
                     string response = sr.ReadLine();
 
                     Console.WriteLine("server response: " + response);
-                }
+
+                } while (requst.A != 0 || requst.B !=0);
             }
             catch (Exception ex)
             {
